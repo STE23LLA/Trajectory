@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+  </head>
+
+  <body>
+    <script src="sketch.js"></script>
+  </body>
+</html>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Machine - Trajectory</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: black; }
+        #container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        #hand { position: absolute; top: 0; left: 0; transform-origin: center right; } /* 旋转中心设置为右侧 */
+    </style>
+</head>
+<body>
+
+    <!-- 图像 1：演奏者 -->
+    <div id="container">
+        <img src="Guitar player.png" id="guitarist">
+        <img src="Right hand.png" id="hand">
+    </div>
+
+    <!-- 音频 -->
+    <audio id="guitar-audio" loop>
+        <source src="Trajectory.mp3" type="audio/mpeg">
+    </audio>
+
+
+    <audio id="myAudio" src="Trajectory.mp3" loop></audio>  
+<button onclick="document.getElementById('myAudio').play()">Click to Play</button>  
+
+<audio>
+    <source src="audio.mp3" type="audio/mpeg">
+    <source src="audio.ogg" type="audio/ogg">
+  </audio>
+
+
+
+    <script>
+        // 1️⃣ Three.js 3D 轨迹
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        camera.position.z = 5;
+
+        let points = [], geometry = new THREE.BufferGeometry();
+        let material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+        let line = new THREE.Line(geometry, material);
+        scene.add(line);
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
+        document.addEventListener("mousemove", (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            let intersect = new THREE.Vector3();
+            if (raycaster.ray.intersectPlane(plane, intersect)) {
+                points.push(intersect.clone());
+            }
+            if (points.length > 500) points.splice(0, 5);
+            if (points.length > 1) {
+                geometry.setFromPoints(points);
+                geometry.attributes.position.needsUpdate = true;
+            }
+        });
+
+        function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+        animate();
+
+        setInterval(() => { points = []; geometry.setFromPoints(points); geometry.attributes.position.needsUpdate = true; }, 60000);
+
+        window.addEventListener("resize", () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+
+        // 2️⃣ 右手旋转 & 音频播放优化
+        let hand = document.getElementById("hand");
+        
+
+        let isPlaying = false;
+        let lastMoveTime = Date.now();
+
+        document.addEventListener("mousemove", () => {
+            let rotation = Math.sin(Date.now() * 0.01) * 3; // ±15° 旋转
+            hand.style.transform = `rotate(${rotation}deg)`;
+          });
+
+        
+
+    </script>
+</body>
+</html>
